@@ -13,6 +13,14 @@ npx skills add karthikkumar27/grepable
 Works with Claude Code, Cursor, Codex and any agent that supports [skills.sh](https://skills.sh).
 Then ask your agent: *"shard docs/original-requirement.md"*.
 
+**Claude Code:** install straight into `~/.claude/skills` (no menu, no symlink), then start a new session:
+
+```bash
+npx skills add karthikkumar27/grepable -g -a claude-code -y
+```
+
+Use `-a claude-code -y` without `-g` to install into the current project's `.claude/skills` instead.
+
 ---
 
 ## The problem
