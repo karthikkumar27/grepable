@@ -22,6 +22,8 @@ Find the requirement document in this order and use the first that exists:
 If none exists, stop and ask for the path. Never pick a "similar-looking" document yourself.
 Shards go to the `Spec shards: <dir>` line if present, otherwise `docs/fsd/`. The source is the business
 source of truth: never edit it.
+If the user points at a shard, `INDEX.md` or the shards folder, the source is the path in the shard's
+line-1 marker (`<!-- source: <path>:L<start>-L<end> -->`).
 
 ## Script
 `scripts/shard.py` **in this skill's own directory** (bundled). Run it with the absolute path of this

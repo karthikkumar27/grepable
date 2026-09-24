@@ -163,13 +163,16 @@ python3 skills/shard/scripts/shard.py docs/original-requirement.md docs/fsd   # 
 
 Test-driven development where **the spec decides what is tested**:
 
-1. Maps your request to spec IDs and shows a test plan (ID, verbatim rule, test name) before writing code.
-2. Lists behaviour the spec does not state as **NOT IN SPEC**, plus open decisions and conflicts, and asks
-   instead of inventing a test.
-3. Red → green → refactor with your existing test framework. Each test name carries the ID, with the
-   source line in a comment:
-   `test("LN-03.R2 renews a loan only once", …) // docs/original-requirement.md:L103`
-4. Reports a traceability table: spec ID → test → status.
+1. **Lists every rule** in the section: each sentence, table cell and bullet. Each rule gets one outcome:
+   *test*, *not testable* (with the reason), *deferred* to a later section, or *open* (a question for the
+   spec owner).
+2. **Shows the test plan** (rule, verbatim text, source line, test name) before writing any test. It
+   asks about gaps instead of inventing expected values.
+3. **Red → green → refactor** with your existing test framework. Each test cites its source line:
+   `test("LN-03.R2 renews a loan only once", …) // docs/original-requirement.md:L103`.
+   For code that already exists, each test is shown to be able to fail before it counts.
+4. **Reports coverage** per rule. For whole-spec runs it keeps a ledger in `docs/spec-coverage.md`, so the
+   work can continue section by section across sessions.
 
 ## grepable:code-review
 

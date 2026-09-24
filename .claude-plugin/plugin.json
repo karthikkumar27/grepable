@@ -1,6 +1,6 @@
 {
   "name": "grepable",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Spec-grounded engineering: shard a large spec into citable sections, then do TDD and code review only against the original requirement document.",
   "author": { "name": "karthikkumar27", "url": "https://github.com/karthikkumar27" },
   "homepage": "https://github.com/karthikkumar27/grepable",

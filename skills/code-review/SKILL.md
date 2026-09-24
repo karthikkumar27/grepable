@@ -16,14 +16,18 @@ Find the requirement document in this order and use the first that exists:
 
 If none exists, stop and ask for the path. Never pick a "similar-looking" document yourself.
 Shards live in the `Spec shards: <dir>` line if present, otherwise `docs/fsd/`.
+If the user points at a shard, `INDEX.md` or the shards folder, the source is the path in the shard's
+line-1 marker (`<!-- source: <path>:L<start>-L<end> -->`).
 
 **Reading the spec.** If shards exist and are fresh, use `INDEX.md` and `ID-MAP.md` to find the section,
 then read that shard (its content is a byte-exact copy of the source). Shards are stale when the source
 changed after `INDEX.md` was generated (compare `git log -1` or file times); then re-run `grepable:shard` or read the source directly. With no
 shards, grep the source for the ID or term and read the whole section around it.
 
-**Citations** always point at the source: `LN-03.R2 (docs/original-requirement.md:L103)`. `ID-MAP.md`
-gives the source line for every ID.
+**Citations always point at the source document, never at a shard.**
+- With IDs: `LN-03.R2 (docs/original-requirement.md:L103)`. `ID-MAP.md` gives the source line.
+- Without IDs: `docs/original-requirement.md:L103`. From a shard, source line = marker start + shard
+  line − 2. If the spec has no IDs at all, say so once and suggest adding them; then proceed with lines.
 
 ## Steps
 
