@@ -1,0 +1,138 @@
+# grepable
+
+**Make your spec greppable, so your AI agent stops guessing.**
+
+`grepable` is an agent skill that splits one large specification (FSD, PRD, SRS) into indexed, citable
+section files. Your coding agent reads the one section it needs instead of skimming a 1,000-line document,
+and every requirement it relies on traces back to an exact `ID (file:line)`.
+
+```bash
+npx skills add karthikkumar27/grepable
+```
+
+Works with Claude Code, Cursor, Codex and any agent that supports [skills.sh](https://skills.sh).
+Then ask your agent: *"shard docs/original-requirement.md"*.
+
+---
+
+## The problem
+
+Give an agent a long spec and it reads the first chunk, skims the rest, and fills the gaps with
+plausible defaults: a 30-day limit where the spec said 14, an error message nobody wrote, a role that can
+do something the spec never allowed. Invented requirements usually come from **too much document, not too
+little**.
+
+## What grepable does
+
+```
+docs/original-requirement.md          docs/fsd/
+  (one 800-line spec)          ──▶      INDEX.md          ← start here: what each file covers
+                                        ID-MAP.md         ← every ID → file:line
+                                        00-preamble.md
+                                        01-document-control.md
+                                        02-loans.md       ← line 1: <!-- source: …:L26-L159 -->
+                                        03-codes-registry-loans.md
+                                        04-open-questions.md
+```
+
+- **One file per `##` section.** Oversized sections are re-split at `###` (`--max-lines`).
+- **`INDEX.md`**: what each shard covers, which IDs it defines, its line range in the source, and a ⚠ count
+  of `Decision pending` / `TBD` / `NOT IN SPEC` items (not buildable yet).
+- **`ID-MAP.md`**: every requirement ID, rule, error code, decision, journey and open question, with the
+  shard `file:line` where it is defined. The agent greps one line instead of reading the spec.
+- **Source markers.** Line 1 of every shard is `<!-- source: docs/original-requirement.md:L26-L159 -->`,
+  so every citation maps back to the original.
+
+A real run on the bundled example ([`templates/FSD-example-loans.md`](templates/FSD-example-loans.md)):
+
+```
+Shards: 5 (level 2, max 800 lines)
+  00-preamble.md                 L1-L9        9 lines   0 IDs  0 flags
+  01-document-control.md         L10-L25     16 lines   2 IDs  0 flags
+  02-loans.md                    L26-L159   134 lines  22 IDs  2 flags
+  03-codes-registry-loans.md     L160-L167    8 lines   3 IDs  0 flags
+  04-open-questions.md           L168-L177   10 lines   6 IDs  0 flags
+IDs defined: 33   referenced-only (never defined): 2   duplicates: 0
+Lossless check: PASS
+```
+
+```
+| ID       | Definition (truncated)                                     | Shard file:line    | Source line |
+|----------|------------------------------------------------------------|--------------------|-------------|
+| LN-03    | Due date and renewal                                       | `02-loans.md:62`   | L86         |
+| LN-03.R2 | A loan can be renewed once, for 7 days.                    | `02-loans.md:79`   | L103        |
+| LN-03.R3 | A loan cannot be renewed while the book has a reservation. | `02-loans.md:80`   | L104        |
+```
+
+On a real 66 KB / 806-line PRD: 21 section files and 128 IDs mapped. A typical lookup reads the index plus
+one section (~18 KB) instead of the whole document.
+
+## Why it helps accuracy
+
+- **Deterministic, never generative.** The script copies byte ranges. It never rewrites, summarises or
+  reorders spec text, and it checks that the shards join back into the source **byte for byte**
+  before writing anything.
+- **Citable.** Every claim can be pinned to `ID (file:line)`, which a reviewer can check in seconds.
+- **Finds spec defects** that cause silent guessing:
+  - **Duplicate IDs**: two places define the same requirement.
+  - **Referenced but never defined**: IDs owned by another document, or that exist only in prose.
+  - **Shorthand ranges** such as `BLK-002 / 003`, where a search for `BLK-003` finds nothing. The script
+    expands these and marks them in `ID-MAP.md`.
+  - **Open items**: sections still containing `TBD` or `Decision pending` are flagged ⚠.
+
+## Usage
+
+Once installed, just ask your agent to *shard*, *split*, *index* or *re-index* the spec. The skill runs the
+steps below and reports the defects it finds.
+
+To run the script yourself (from a clone of this repo):
+
+```bash
+# 1. See which ID families the document uses
+python3 grepable/scripts/grepable.py docs/original-requirement.md --discover
+
+# 2. Dry run: check shard sizes, lossless PASS, duplicates
+python3 grepable/scripts/grepable.py docs/original-requirement.md docs/fsd --dry-run \
+  --id-pattern '(?<![\w-])[A-Z]{1,5}-\d{1,4}(?:\.R\d+)?(?![\w-])' \
+  --id-pattern '(?<![\w-])AC-[A-Z]{1,5}-\d{1,4}-\d{1,3}(?![\w-])' \
+  --id-pattern '(?<![\w-])[DJQ]\d{1,2}(?![\w-])'
+
+# 3. Write (add --force to replace previously generated shards)
+python3 grepable/scripts/grepable.py docs/original-requirement.md docs/fsd   # + the same --id-pattern flags
+```
+
+| Option | Default | Meaning |
+|---|---|---|
+| `--level` | `2` | Heading level to split at |
+| `--max-lines` | `800` | Re-split larger sections at the next heading level |
+| `--id-pattern` | `AREA-NN`, `AREA-NN.Rn`, `AC-AREA-NN-n` | Regex for IDs; repeatable; replaces the defaults |
+| `--flag-pattern` | `Decision pending\|TBD\|TODO\|NOT IN SPEC` | Open-item markers counted as ⚠ |
+| `--discover` | | Print candidate ID families and exit |
+| `--dry-run` | | Report only; write nothing |
+| `--force` | | Delete existing `.md` files in the output folder before writing |
+
+**Re-run whenever the source spec changes.** Stale shards are worse than none.
+
+## What the script touches
+
+- **Reads** only the source file you pass. The source is never modified.
+- **Writes** only into the output folder you pass. With `--force` it first deletes the `.md` files in that
+  folder, and only there.
+- **No network, no dependencies.** Python 3.8+, standard library only.
+
+## Templates (optional)
+
+[`templates/`](templates/) holds the conventions grepable was built for:
+
+- [`FSD-TEMPLATE.md`](templates/FSD-TEMPLATE.md): a requirement-ID FSD format. One `##` per section, one
+  `###` per requirement (`### LN-03 — Title`), and atomic rules in tables whose first column is the rule ID,
+  so every rule is greppable.
+- [`FSD-example-loans.md`](templates/FSD-example-loans.md): a worked example for a fictional book-lending
+  app, including prose rules given IDs and gaps recorded as open questions instead of assumptions.
+- [`CLAUDE-spec-section.md`](templates/CLAUDE-spec-section.md): a drop-in `CLAUDE.md` / `AGENTS.md`
+  section with citation rules and a zero-assumption policy. The agent never states a requirement from
+  memory, cites `ID (file:line)`, and writes `NOT IN SPEC` instead of guessing.
+
+## License
+
+[MIT](LICENSE). Review the script before running it on your own repository. It is about 300 lines.
