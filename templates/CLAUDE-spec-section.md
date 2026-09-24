@@ -1,9 +1,12 @@
 ## Specs & Source Documents
 
 ### Where things live
+Spec source: docs/original-requirement.md
+Spec shards: docs/fsd/
+
 - `docs/fsd/INDEX.md`: map of every spec section. **Start here.** Never read a whole spec file blindly.
 - `docs/fsd/ID-MAP.md`: every requirement ID, rule ID, code, decision (D), journey (J) and open question (Q), with the shard `file:line` where it is defined.
-- `docs/fsd/*.md`: spec sections, one topic per file. **Generated** by the `grepable` skill (`scripts/grepable.py`) from the source below. Never edit shards; edit the source and re-shard.
+- `docs/fsd/*.md`: spec sections, one topic per file. **Generated** by the `grepable:shard` skill (`scripts/shard.py`) from the source below. Never edit shards; edit the source and re-shard.
 - `docs/original-requirement.md`: business source of truth.
 - Line 1 of every shard is `<!-- source: docs/original-requirement.md:L<start>-L<end> -->`. Shard line N = source line start + N − 2.
 - The FSD is the implementation contract. When sources disagree, **never pick a winner yourself**. Report it as a CONFLICT (see below). Priority for proposing a resolution: original-requirement > FSD > existing code.
@@ -24,7 +27,7 @@
 ### Citation rules (non-negotiable)
 - Never state a requirement, field name, enum, validation rule or business rule from memory.
 - Every requirement you rely on must cite its source as `ID (shard-file:line)`, e.g. `LN-03 (02-loans.md:12)`. For text without an ID, cite `shard-file:line`.
-- If the spec is stale (source changed but shards were not regenerated), say so and re-run the `grepable` skill before continuing.
+- If the spec is stale (source changed but shards were not regenerated), say so and re-run the `grepable:shard` skill before continuing.
 - If you can't cite it, treat it as unverified and say so.
 - If the spec doesn't cover something, write **`NOT IN SPEC`** and ask. Do not invent a plausible default.
 - Quote exact values (codes, field names, limits) verbatim from the source. Don't paraphrase them.

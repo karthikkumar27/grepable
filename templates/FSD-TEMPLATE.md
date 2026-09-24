@@ -4,7 +4,7 @@
 
 <!--
 HOW TO USE THIS TEMPLATE
-- One `##` heading = one shard file after running grepable.py. Keep each `##` section under ~400 lines.
+- One `##` heading = one shard file after running shard.py. Keep each `##` section under ~400 lines.
 - One `###` heading = one requirement, and the heading MUST start with its ID: `### LN-03 — Title`.
 - Atomic rules live in a table whose FIRST column is the rule ID. The sharder treats headings and
   first table cells as definitions, so every ID below becomes greppable in ID-MAP.md.

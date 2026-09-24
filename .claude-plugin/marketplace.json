@@ -1,0 +1,15 @@
+{
+  "name": "grepable",
+  "owner": {
+    "name": "karthikkumar27",
+    "url": "https://github.com/karthikkumar27"
+  },
+  "description": "grepable: spec-grounded engineering skills for AI coding agents.",
+  "plugins": [
+    {
+      "name": "grepable",
+      "source": "./",
+      "description": "Spec-grounded engineering: shard a large spec into citable sections, then do TDD and code review only against the original requirement document."
+    }
+  ]
+}
